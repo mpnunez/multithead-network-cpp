@@ -7,7 +7,7 @@ all: prog.x
 
 # program with curlpp
 prog.x: main.cpp
-	$(CPP) -O3 -o prog.x main.cpp -I/usr/local/include -L/usr/local/lib -lcurl -lcurlpp
+	$(CPP) -O3 -o prog.x main.cpp -I/usr/local/include -L/usr/local/lib -lcurl -lcurlpp -lpthread
 
 # Clean outputs.
 clean:

@@ -4,6 +4,9 @@
 * 
 */
 
+#include <thread>
+#include <vector>
+
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
@@ -11,8 +14,10 @@
 
 using namespace curlpp::options;
 
-int get_card(int card_ind)
+void get_card(int card_ind)
 {
+
+    
 	try
 	{
 		// Our request to be sent.
@@ -37,11 +42,13 @@ int get_card(int card_ind)
 		std::cout << e.what() << std::endl;
 	}
     
-  return 0;
 }
 
 int main(){
 
-    for(int i = 1; i <= 9; i++) get_card(i);
+    std::vector<std::thread> threads;
+    for(int i = 1; i <= 9; i++) threads.emplace_back(get_card,i);
+
+    for(auto& th : threads) th.join();
 
 }
