@@ -11,7 +11,7 @@
 
 using namespace curlpp::options;
 
-int main(int, char **)
+int get_card(int card_ind)
 {
 	try
 	{
@@ -19,7 +19,8 @@ int main(int, char **)
 		curlpp::Easy myRequest;
 
 		// Set the URL.
-		myRequest.setOpt<curlpp::options::Url>("https://ringsdb.com/api/public/card/01001");
+        std::string url = "https://ringsdb.com/api/public/card/0100" + std::to_string(card_ind);
+		myRequest.setOpt<curlpp::options::Url>(url);
 
 		// Send request and get a result.
 		// By default the result goes to standard output.
@@ -37,4 +38,10 @@ int main(int, char **)
 	}
     
   return 0;
+}
+
+int main(){
+
+    for(int i = 1; i <= 9; i++) get_card(i);
+
 }
