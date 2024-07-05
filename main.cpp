@@ -46,9 +46,7 @@ void get_card(int card_ind)
 
 int main(){
 
-    std::vector<std::thread> threads;
+    std::vector<std::jthread> threads;
     for(int i = 1; i <= 9; i++) threads.emplace_back(get_card,i);
-
-    for(auto& th : threads) th.join();
 
 }

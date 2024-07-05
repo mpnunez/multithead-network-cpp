@@ -1,4 +1,4 @@
-CPP=g++ -std=c++17 -Wfatal-errors -Wextra -Wall -Wfloat-equal -Winit-self -Wuninitialized
+CPP=g++ -std=c++20 -Wfatal-errors -Wextra -Wall -Wfloat-equal -Winit-self -Wuninitialized
 
 .PHONY: all
 
