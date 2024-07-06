@@ -6,13 +6,18 @@
 
 #include <thread>
 #include <vector>
+#include <sstream>
+#include <iostream>
 
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
 
+#include <nlohmann/json.hpp>
 
 using namespace curlpp::options;
+
+using namespace nlohmann::json_abi_v3_11_3;
 
 void get_card(int card_ind)
 {
@@ -20,16 +25,23 @@ void get_card(int card_ind)
     
 	try
 	{
-		// Our request to be sent.
-		curlpp::Easy myRequest;
-
 		// Set the URL.
         std::string url = "https://ringsdb.com/api/public/card/0100" + std::to_string(card_ind);
-		myRequest.setOpt<curlpp::options::Url>(url);
+		
 
-		// Send request and get a result.
-		// By default the result goes to standard output.
-		myRequest.perform();
+        // The first easiest example is to retreive the content of
+        // a web page and put it in a stream.
+        //curlpp::options::Url(url);
+
+        // You don't need to use just the standard outputs. You
+        // can use any stream:
+        std::ostringstream os;
+        os << curlpp::options::Url(url);
+
+        std::string json_str = os.str();
+
+        std::cout << json_str << '\n';
+        json data = json::parse(json_str);
 	}
 
 	catch(curlpp::RuntimeError & e)
