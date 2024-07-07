@@ -43,6 +43,9 @@ std::string int_str_with_zeros(int i, int n_digits){
 
 int get_card(int pack_id, int card_ind)
 {
+
+    if(card_ind<=0 || card_ind>999) return 1;
+
     std::ostringstream os;
     const std::string base_url = "https://ringsdb.com/api/public/card/";
     std::string url = base_url
@@ -56,6 +59,7 @@ int get_card(int pack_id, int card_ind)
     json data = json::parse(json_str);
     if(data.find("error")!=data.end()) return 1;
 
+    
     writer_lock.lock();
     std::cout << data.at("name")
         << '\t' << "Pack name: " << data.at("pack_name")
@@ -71,7 +75,7 @@ int get_card_fake(int pack_id, int card_ind){
 
     std::mt19937_64 eng{std::random_device{}()};  // or seed however you want
     
-    std::uniform_int_distribution<> dist{1, 10};
+    std::uniform_int_distribution<> dist{10, 100};
     std::this_thread::sleep_for(std::chrono::milliseconds{dist(eng)});
 
 
@@ -93,25 +97,26 @@ void process_cards(){
         
 
         gLock.lock();
-        if(next_pack_id>5){
+        if(next_pack_id>5){     // Look at first 5 packs
             gLock.unlock();
-            break;       // Look at first 5 packs
+            break;       
         }
+
+        if(next_card_id>999){  // Valid card IDs are 1-999
+            next_pack_id++;
+            next_card_id = 1;
+        }
+        
         int current_pack_id = next_pack_id;
         int current_card_id = next_card_id++;
         gLock.unlock();
 
         bool first_card = current_card_id == 1;
 
+        //writer_lock.lock();
+        //std::cout << current_pack_id << '\t' << current_card_id << '\n';
+        //writer_lock.unlock();
         bool got_card = get_card(current_pack_id, current_card_id) == 0;
-        
-        // No more valid cards in this pack -> try next pack
-        gLock.lock();
-        if(current_pack_id==next_pack_id && current_card_id==999){
-            next_pack_id++;
-            next_card_id = 1;
-        }   
-        gLock.unlock();
     }
 }
 
