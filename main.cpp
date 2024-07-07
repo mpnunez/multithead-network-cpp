@@ -20,6 +20,7 @@ using namespace curlpp::options;
 using namespace nlohmann::json_abi_v3_11_3;
 
 static std::mutex gLock;
+static std::mutex writer_lock;
 
 
 struct Card {
@@ -48,37 +49,20 @@ int get_card(int pack_id, int card_ind)
         + int_str_with_zeros(pack_id, 2)
         + int_str_with_zeros(card_ind, 3);
 
-	try
-	{
-        os << curlpp::options::Url(url);
-	}
-	catch(curlpp::RuntimeError & e)
-	{
-		std::cout << e.what() << std::endl;
-        return 1;
-	}
+    os << curlpp::options::Url(url);
 
-	catch(curlpp::LogicError & e)
-	{
-		std::cout << e.what() << std::endl;
-        return 1;
-	}
 
     std::string json_str = os.str();
     json data = json::parse(json_str);
-    try{
-        gLock.lock();
-        std::cout << data.at("name")
-            << '\t' << "Pack name: " << data.at("pack_name")
-            << '\t' << "Position: " << data.at("position")
-            << '\t' << "Code: " << data.at("code") << '\n';
-        gLock.unlock();
-    }
-    catch(nlohmann::json_abi_v3_11_3::detail::out_of_range&){
-        //std::cout << json_str << '\n';
-        gLock.unlock();
-        return 1;
-    } 
+    if(data.find("error")!=data.end()) return 1;
+
+    writer_lock.lock();
+    std::cout << data.at("name")
+        << '\t' << "Pack name: " << data.at("pack_name")
+        << '\t' << "Position: " << data.at("position")
+        << '\t' << "Code: " << data.at("code") << '\n';
+    writer_lock.unlock();
+
     return 0;
 }
 
@@ -93,44 +77,39 @@ int get_card_fake(int pack_id, int card_ind){
 
     //if(pack_id>100) return 1;
     if(card_ind>100) return 1;
-    gLock.lock();
+    writer_lock.lock();
     std::cout << "Pack " << pack_id << '\t' << "Card " << card_ind << '\n';
-    gLock.unlock();
+    writer_lock.unlock();
     return 0;
 }
 
 void process_cards(){
 
     static int next_pack_id = 1;
-    static std::vector<int> next_card_id(1,1);
+    static int next_card_id = 1;
 
     while(true){
 
         
 
         gLock.lock();
-        if(next_pack_id>100){
+        if(next_pack_id>5){
             gLock.unlock();
             break;       // Look at first 5 packs
         }
         int current_pack_id = next_pack_id;
-        int current_card_id = next_card_id[current_pack_id-1]++;
+        int current_card_id = next_card_id++;
         gLock.unlock();
 
         bool first_card = current_card_id == 1;
 
-        bool got_card = get_card_fake(current_pack_id, current_card_id) == 0;
-        if(got_card){
-            continue;
-        }
-
-        if(first_card) break;  // First card in pack was invalid
+        bool got_card = get_card(current_pack_id, current_card_id) == 0;
         
         // No more valid cards in this pack -> try next pack
         gLock.lock();
-        if(current_pack_id==next_pack_id){
+        if(current_pack_id==next_pack_id && current_card_id==999){
             next_pack_id++;
-            next_card_id.push_back(1);
+            next_card_id = 1;
         }   
         gLock.unlock();
     }
