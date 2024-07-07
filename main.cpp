@@ -6,6 +6,9 @@
 #include <sstream>
 #include <iostream>
 
+#include <random>
+#include <chrono>
+
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
@@ -80,7 +83,15 @@ int get_card(int pack_id, int card_ind)
 }
 
 int get_card_fake(int pack_id, int card_ind){
-    if(pack_id>100) return 1;
+
+
+    std::mt19937_64 eng{std::random_device{}()};  // or seed however you want
+    
+    std::uniform_int_distribution<> dist{1, 10};
+    std::this_thread::sleep_for(std::chrono::milliseconds{dist(eng)});
+
+
+    //if(pack_id>100) return 1;
     if(card_ind>100) return 1;
     gLock.lock();
     std::cout << "Pack " << pack_id << '\t' << "Card " << card_ind << '\n';
@@ -98,7 +109,7 @@ void process_cards(){
         
 
         gLock.lock();
-        if(next_pack_id>5){
+        if(next_pack_id>100){
             gLock.unlock();
             break;       // Look at first 5 packs
         }
@@ -108,7 +119,7 @@ void process_cards(){
 
         bool first_card = current_card_id == 1;
 
-        bool got_card = get_card(current_pack_id, current_card_id) == 0;
+        bool got_card = get_card_fake(current_pack_id, current_card_id) == 0;
         if(got_card){
             continue;
         }
@@ -126,6 +137,8 @@ void process_cards(){
 }
 
 int main(){
+    
+
 
     std::vector<std::jthread> threads;
     for(int i = 1; i <= 100; i++) threads.emplace_back(process_cards);
